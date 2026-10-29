@@ -119,7 +119,7 @@ canvas.addEventListener('pointerup',e=>{
   const moved=drag.move,wasPan=panDrag,button=dragButton,from=dragStart;
   drag=null;previewPath=[];
   if(button===2){if(!moved)inspect(pos(e.clientX,e.clientY).x,pos(e.clientX,e.clientY).y);return;}
-  if(wasPan||selected==='pan')return;
+  if((wasPan&&moved)||selected==='pan')return;
   if(selected==='road'&&from){
     const cells=lineCells(from,pos(e.clientX,e.clientY));
     apply({type:'build-path',cells});return;
