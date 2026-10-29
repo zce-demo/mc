@@ -6,11 +6,10 @@
 
 ```bash
 npm install
-npm run build
 npm run dev
 ```
 
-也可以直接在项目根目录运行 `python3 -m http.server 5173`，打开 `http://localhost:5173`，压缩包已经包含 `dist/` 编译结果。不要直接双击 `index.html`（浏览器 file:// 模块限制可能阻止加载）。
+`npm run dev` 会先编译 TypeScript，再启动 Vite 开发服务器。若要用普通静态服务器启动，请先执行 `npm run build` 生成 `dist/`，再运行 `python3 -m http.server 5173` 并访问 `http://localhost:5173`。不要直接双击 `index.html`（浏览器 file:// 模块限制可能阻止加载）。
 
 ```bash
 npm test
