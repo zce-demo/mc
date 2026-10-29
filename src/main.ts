@@ -4,10 +4,10 @@ import {dispatch,nextDay,report} from './sim/engine.js';
 import {initialCity,type City} from './sim/model.js';
 import {ground,key,parcelKey,PARCEL} from './sim/world.js';
 const app=document.getElementById('app')!;
-app.innerHTML=`<canvas id="map"></canvas><header><div class="brand">🌿 <b>我的迷你城市</b><small>第一章 · v0.1</small></div><div id="stats"></div><button id="toggle">☰ 工作区</button></header><section id="mission" aria-label="当前市长目标"></section><aside id="workspace"><div class="tabs"><button data-tab="build" class="selected">建造</button><button data-tab="finance">财政</button><button data-tab="service">民生</button><button data-tab="land">土地</button><button data-tab="guide">引导</button></div><div id="panel"></div></aside><footer><span id="mode"></span><button id="undo">↶ 撤销</button><button id="pause">⏸ 暂停</button><button id="advance">⏩ 过一天</button><button id="save">💾 保存</button><button id="export">↓ 导出</button><button id="import">↑ 导入</button><input type="file" id="upload" accept=".json" hidden><span>空格拖动地图 · 道路拖动铺设 · R 道路 · I 检查</span></footer><div id="toast" role="status"></div>`;
+app.innerHTML=`<canvas id="map"></canvas><header><div class="brand">🌿 <b>我的迷你城市</b><small>第一章 · v0.1</small></div><div id="stats"></div><button id="toggle">☰ 工作区</button></header><section id="mission" aria-label="当前市长目标"></section><aside id="workspace"><div class="tabs"><button data-tab="build" class="selected">建造</button><button data-tab="finance">财政</button><button data-tab="service">民生</button><button data-tab="land">土地</button><button data-tab="guide">引导</button></div><div id="panel"></div></aside><footer><span id="mode"></span><button id="undo">↶ 撤销</button><button id="pause">⏸ 暂停</button><button id="advance">⏩ 过一天</button><button id="speed" title="切换自动推进速度">1×</button><button id="save">💾 保存</button><button id="export">↓ 导出</button><button id="import">↑ 导入</button><input type="file" id="upload" accept=".json" hidden><span>空格拖动地图 · 道路拖动铺设 · R 道路 · I 检查</span></footer><div id="toast" role="status"></div>`;
 const canvas=document.querySelector<HTMLCanvasElement>('#map')!, ctx=canvas.getContext('2d')!;
 let dragStart:{x:number;y:number}|null=null,dragButton=0,panDrag=false;
-let city:City=initialCity(),tab='build',selected:Kind|'inspect'|'demolish'|'pan'='road',hover:{x:number;y:number}|null=null,scale=40,cam={x:-10,y:-7},drag:{x:number;y:number;cx:number;cy:number;move:boolean}|null=null,space=false,hidden=false,flash=0,inspected:{x:number;y:number}|null=null,previewPath:{x:number;y:number}[]=[];
+let city:City=initialCity(),tab='build',selected:Kind|'inspect'|'demolish'|'pan'='road',hover:{x:number;y:number}|null=null,scale=40,cam={x:-10,y:-7},drag:{x:number;y:number;cx:number;cy:number;move:boolean}|null=null,space=false,hidden=false,flash=0,speed=1,inspected:{x:number;y:number}|null=null,previewPath:{x:number;y:number}[]=[];
 const stats=document.getElementById('stats')!,panel=document.getElementById('panel')!,toast=document.getElementById('toast')!;
 
 function renderMission(){
@@ -61,15 +61,22 @@ function renderPanels(){const r=report(city);renderMission();stats.innerHTML=`<s
   }else if(tab==='land'){
     const parcels=[];const candidates=new Set<string>();for(const owned of city.parcels){const [px,py]=owned.split(',').map(Number);for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const n=key(px+dx,py+dy);if(!city.parcels.includes(n))candidates.add(n)}}for(const k of [...candidates].sort((a,b)=>{const aa=a.split(',').map(Number),bb=b.split(',').map(Number);return Math.hypot(...aa)-Math.hypot(...bb)}).slice(0,16)){const [px,py]=k.split(',').map(Number),price=120+Math.round(35*Math.hypot(px,py));parcels.push(`<button class="parcel" data-parcel="${k}"><span>📍 区块 ${px},${py}</span><b>${price} 金币</b></button>`)}
     panel.innerHTML=`<h2>土地开发局</h2><p class="sub">按 6×6 格购买，东南西北可持续扩建。对角地块需先从共享边界进入。</p><div class="parcel-list">${parcels.join('')}</div><p class="sub">已购买 ${city.parcels.length} 块土地。选择待售区块后，视野会前往新区。</p>`;
-  }else panel.innerHTML=`<h2>市长手册</h2><p class="sub">第一章 · 让小镇住进第一批居民</p><ol><li>选「道路」，从中心十字路附近铺设道路。</li><li>在道路旁建住宅、商店和农场。</li><li>建发电站、水塔，让居民搬入。</li><li>建学校和诊所，打开「民生」查看实际服务人数。</li><li>连续推进游戏日，观察收入是否能够覆盖公共设施支出。</li><li>河流要建桥、山地要建隧道；土地开发局购买新区。</li></ol><h3>城市日志</h3><div class="logs">${city.log.slice(0,12).map(s=>`<p>${s}</p>`).join('')}</div>`;
+  }else panel.innerHTML=`<h2>小镇生活手册</h2><p class="sub">第一章 · 让小镇住进第一批居民</p><ol><li>选「道路」，从中心十字路附近铺设道路。</li><li>在道路旁建住宅、商店和农场。</li><li>建发电站、水塔，让居民搬入。</li><li>建学校和诊所，打开「民生」查看实际服务人数。</li><li>连续推进游戏日，观察收入是否能够覆盖公共设施支出。</li><li>河流要建桥、山地要建隧道；土地开发局购买新区。</li></ol><button id="new-city" style="width:100%;margin:10px 0">↺ 开始新的城市</button><h3>城市日志</h3><div class="logs">${city.log.slice(0,12).map(s=>`<p>${s}</p>`).join('')}</div>`;
   document.querySelectorAll<HTMLButtonElement>('[data-tool]').forEach(b=>b.onclick=()=>{selected=b.dataset.tool as typeof selected;renderPanels();draw()});
   document.querySelectorAll<HTMLButtonElement>('[data-parcel]').forEach(b=>b.onclick=()=>{const [px,py]=b.dataset.parcel!.split(',').map(Number);apply({type:'parcel',px,py});cam.x=px*PARCEL-6;cam.y=py*PARCEL-6;draw()});
   document.querySelectorAll<HTMLButtonElement>('[data-operation]').forEach(b=>b.onclick=()=>{
     if(!inspected)return;apply({type:'operate',x:inspected.x,y:inspected.y,operation:b.dataset.operation as Operation});
   });
+  const reset=document.getElementById('new-city');
+  if(reset)reset.onclick=()=>{
+    if(!confirm('确定重新开始？当前城市会被新的进度覆盖。建议先导出 JSON 备份。'))return;
+    city=initialCity();inspected=null;persist();tab='build';selected='road';cam={x:-10,y:-7};
+    renderPanels();draw();notify('🌱 新的小镇已准备好');
+  };
   const tax=document.querySelector<HTMLInputElement>('#tax');if(tax)tax.onchange=()=>apply({type:'tax',value:+tax.value});
   document.querySelectorAll<HTMLButtonElement>('[data-tab]').forEach(b=>b.classList.toggle('selected',b.dataset.tab===tab));document.getElementById('mode')!.textContent=`🖱️ ${selectedName()}`;
   document.getElementById('pause')!.textContent=city.paused?'▶ 继续':'⏸ 暂停';
+  canvas.style.cursor=selected==='pan'?'grab':selected==='inspect'?'help':selected==='demolish'?'not-allowed':'crosshair';
 }
 function size(){const w=window.innerWidth,h=window.innerHeight,dpr=Math.min(devicePixelRatio||1,2);canvas.width=w*dpr;canvas.height=h*dpr;canvas.style.width=w+'px';canvas.style.height=h+'px';ctx.setTransform(dpr,0,0,dpr,0,0);draw()}
 const pos=(sx:number,sy:number)=>({x:Math.floor(cam.x+sx/scale),y:Math.floor(cam.y+sy/scale)});
@@ -84,7 +91,13 @@ function draw(){const w=innerWidth,h=innerHeight;ctx.clearRect(0,0,w,h);const mi
       ctx.fillRect(sx+2,sy+2,scale-4,scale-4);
     }
   }
-  if(hover){const sx=(hover.x-cam.x)*scale,sy=(hover.y-cam.y)*scale;ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.strokeRect(sx+1,sy+1,scale-2,scale-2);ctx.lineWidth=1}
+  if(hover){const sx=(hover.x-cam.x)*scale,sy=(hover.y-cam.y)*scale;
+    if(selected in BUILDINGS&&!previewPath.length){
+      const test=dispatch(city,{type:'build',x:hover.x,y:hover.y,kind:selected as Kind});
+      ctx.fillStyle=test.ok?'rgba(102,237,164,.38)':'rgba(246,92,103,.32)';
+      ctx.fillRect(sx+2,sy+2,scale-4,scale-4);
+    }
+    ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.strokeRect(sx+1,sy+1,scale-2,scale-2);ctx.lineWidth=1}
   ctx.textAlign='center';ctx.font='bold 14px sans-serif';ctx.fillStyle='#f3fff6';const sx=(-cam.x)*scale,sy=(-cam.y)*scale;if(sx>-50&&sx<w+50&&sy>-50&&sy<h+50){ctx.fillText('✦ 市中心',sx+scale/2,sy-10)}ctx.textAlign='start';
 }
 function inspect(x:number,y:number){
@@ -141,6 +154,11 @@ document.querySelectorAll<HTMLButtonElement>('[data-tab]').forEach(b=>b.onclick=
 document.getElementById('toggle')!.onclick=()=>{hidden=!hidden;document.getElementById('workspace')!.classList.toggle('hidden',hidden)};
 document.getElementById('undo')!.onclick=()=>apply({type:'undo'});
 document.getElementById('pause')!.onclick=()=>{city.paused=!city.paused;renderPanels()};
+document.getElementById('speed')!.onclick=()=>{
+  speed=speed===1?2:speed===2?4:1;
+  document.getElementById('speed')!.textContent=speed+'×';
+  notify('⏱️ 城市运行速度：'+speed+'×');
+};
 function step(){if(city.paused||document.hidden)return;const oldMission=city.mission??0,r=nextDay(city);
   city=r.city;persist();renderPanels();draw();
   if((city.mission??0)>oldMission)notify('🎉 城市目标完成，已获得奖励');
@@ -149,4 +167,11 @@ document.getElementById('advance')!.onclick=step;document.getElementById('save')
 document.getElementById('export')!.onclick=()=>{const blob=new Blob([JSON.stringify({...city,history:[]})],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`mini-city-day-${city.day}.json`;a.click();URL.revokeObjectURL(a.href)};
 document.getElementById('import')!.onclick=()=>document.querySelector<HTMLInputElement>('#upload')!.click();document.querySelector<HTMLInputElement>('#upload')!.onchange=async e=>{const file=(e.target as HTMLInputElement).files?.[0];if(!file)return;try{const data=JSON.parse(await file.text());if(data.version!==1||!Array.isArray(data.parcels)||!data.buildings||!Number.isFinite(data.cash))throw new Error('格式不兼容');city={...initialCity(),...data,history:[]};renderPanels();draw();persist();notify('已导入 v0.1 存档')}catch{notify('无法导入：仅支持 v0.1 JSON 存档')}};
 window.addEventListener('keydown',e=>{if(e.target instanceof HTMLInputElement)return;if(e.key===' '){e.preventDefault();space=true}if(e.ctrlKey&&e.key.toLowerCase()==='z'){e.preventDefault();apply({type:'undo'})}if(e.key.toLowerCase()==='r'){selected='road';renderPanels()}if(e.key.toLowerCase()==='i'){selected='inspect';renderPanels()}if(e.key.toLowerCase()==='p'){city.paused=!city.paused;renderPanels()}if(e.key.toLowerCase()==='f'){cam={x:-10,y:-7};draw()}if(e.key.toLowerCase()==='h'){hidden=!hidden;document.getElementById('workspace')!.classList.toggle('hidden',hidden)}});window.addEventListener('keyup',e=>{if(e.key===' ')space=false});window.addEventListener('resize',size);
-renderPanels();size();setInterval(()=>{if(!city.paused)step();if(performance.now()>flash)toast.classList.remove('visible')},9000);setInterval(()=>{if(performance.now()>flash)toast.classList.remove('visible')},250);
+renderPanels();size();
+let elapsed=0;
+setInterval(()=>{
+  if(city.paused||document.hidden)return;
+  elapsed+=500;
+  if(elapsed>=9000/speed){elapsed=0;step();}
+},500);
+setInterval(()=>{if(performance.now()>flash)toast.classList.remove('visible')},250);
