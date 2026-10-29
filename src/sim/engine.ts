@@ -1,5 +1,6 @@
 import {BUILDINGS,type Kind,type Operation} from '../content/buildings.js';
 import {ground,key,neighbours,parcelKey} from './world.js';
+import {missionView} from '../content/missions.js';
 import {clone,type City,type CitySnapshot,type Command,type Building} from './model.js';
 export interface Coverage {demand:number;served:number;capacity:number;ratio:number;missing:{x:number;y:number}[]}
 export interface Report {population:number;capacity:number;jobs:number;filledJobs:number;power:{supply:number;demand:number};water:{supply:number;demand:number};education:Coverage;health:Coverage;connected:Set<string>;income:{resident:number;commerce:number};expenses:{transport:number;services:number;utilities:number};net:number;happiness:number}
@@ -26,10 +27,44 @@ export function report(city:City):Report{
   const happiness=Math.round(25+education.ratio*22+health.ratio*22+serviceFactor*20+Math.max(0,11-city.taxRate));
   return {population,capacity,jobs,filledJobs,power,water,education,health,connected,income:{resident,commerce},expenses,net,happiness:Math.min(100,happiness)};
 }
+
+function completeMissions(city:City):number {
+  let total=0;
+  for(let safety=0;safety<5;safety++){
+    const m=missionView(city,report(city));
+    if(!m.complete || (city.mission??0)>=5)break;
+    city.cash+=m.reward;total+=m.reward;
+    city.log.unshift(`🎉 完成「${m.title}」，获得 ${m.reward} 金币！`);
+    city.mission=(city.mission??0)+1;city.stableDays=0;
+  }
+  return total;
+}
+
 export function predictNextDay(city:City){return report(city).net}
-function snapshot(c:City):CitySnapshot{return clone({cash:c.cash,taxRate:c.taxRate,buildings:c.buildings,parcels:c.parcels,nextId:c.nextId})}
+function snapshot(c:City):CitySnapshot{return clone({cash:c.cash,taxRate:c.taxRate,buildings:c.buildings,parcels:c.parcels,nextId:c.nextId,mission:c.mission,stableDays:c.stableDays})}
 export function dispatch(city:City,cmd:Command):{ok:true;city:City;message:string}|{ok:false;message:string}{
   const c=clone(city);if(cmd.type==='undo'){const last=c.history.pop();if(!last)return {ok:false,message:'当前没有可撤销的操作'};if(last.day!==c.day)return {ok:false,message:'跨日操作不可撤销'};Object.assign(c,last.before);return {ok:true,city:c,message:'已撤销最近一次操作'};}
+  if(cmd.type==='build-path'){
+    const beforePath=snapshot(c);
+    let working=c,placed=0,reason='';
+    const seen=new Set<string>();
+    for(const cell of cmd.cells.slice(0,150)){
+      const k=key(cell.x,cell.y);if(seen.has(k)||working.buildings[k])continue;seen.add(k);
+      const terrain=ground(cell.x,cell.y,working.seed);
+      const kind:Kind=terrain==='water'?'bridge':terrain==='mountain'?'tunnel':'road';
+      const result=dispatch(working,{type:'build',x:cell.x,y:cell.y,kind});
+      if(!result.ok){reason=result.message;break;}
+      working=result.city;placed++;
+    }
+    if(!placed)return {ok:false,message:reason||'没有可铺设的道路'};
+    working.history=c.history;
+    working.history.push({kind:'build',before:beforePath,day:working.day});
+    if(working.history.length>10)working.history.shift();
+    const message=`连续建设 ${placed} 格道路${reason?'（后续因施工条件停止）':''}`;
+    working.log.unshift(`第 ${working.day} 天 · ${message}`);
+    working.log=working.log.slice(0,100);
+    return {ok:true,city:working,message};
+  }
   const before=snapshot(c);let message='';
   if(cmd.type==='parcel'){
     const k=key(cmd.px,cmd.py);if(c.parcels.includes(k))return {ok:false,message:'已经购买这块土地'};
@@ -53,7 +88,7 @@ export function dispatch(city:City,cmd:Command):{ok:true;city:City;message:strin
       existing.operation=cmd.operation;message=BUILDINGS[existing.kind].name+'运营状态：'+cmd.operation;
     }
   }
-  c.history.push({kind:cmd.type,before,day:c.day});if(c.history.length>10)c.history.shift();c.log.unshift('第 '+c.day+' 天 · '+message);c.log=c.log.slice(0,100);return {ok:true,city:c,message};
+  c.history.push({kind:cmd.type,before,day:c.day});if(c.history.length>10)c.history.shift();c.log.unshift('第 '+c.day+' 天 · '+message);c.log=c.log.slice(0,100);completeMissions(c);return {ok:true,city:c,message};
 }
 export function nextDay(city:City):{city:City;opening:number;entries:{name:string;amount:number}[];closing:number}{
   const c=clone(city),opening=c.cash,pre=report(c);
@@ -61,6 +96,13 @@ export function nextDay(city:City):{city:City;opening:number;entries:{name:strin
   c.cash+=entries.reduce((s,e)=>s+e.amount,0);
   const ready=pre.capacity>c.population&&pre.power.supply>=pre.power.demand&&pre.water.supply>=pre.water.demand&&pre.jobs>Math.floor(c.population*.5);
   if(ready)c.population=Math.min(pre.capacity,c.population+Math.max(1,Math.ceil(pre.happiness/35)));else if((pre.happiness<36||pre.power.supply<pre.power.demand||pre.water.supply<pre.water.demand)&&c.population>0)c.population=Math.max(0,c.population-1);
-  c.day++;c.history=[];c.log.unshift('第 '+(c.day-1)+' 天结算：'+(pre.net>=0?'+':'')+pre.net+' 金币 · 人口 '+pre.population+' → '+c.population);c.log=c.log.slice(0,100);
+  c.day++;c.history=[];
+  if((c.mission??0)===4){
+    const fresh=report(c);
+    c.stableDays=fresh.population>=20&&fresh.net>=0?(c.stableDays??0)+1:0;
+  }
+  const reward=completeMissions(c);
+  if(reward)entries.push({name:'章节目标奖励',amount:reward});
+  c.log.unshift('第 '+(c.day-1)+' 天结算：'+(pre.net>=0?'+':'')+pre.net+' 金币 · 人口 '+pre.population+' → '+c.population);c.log=c.log.slice(0,100);
   return {city:c,opening,entries,closing:c.cash};
 }
