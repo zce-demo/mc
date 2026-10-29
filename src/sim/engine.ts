@@ -98,8 +98,8 @@ export function nextDay(city:City):{city:City;opening:number;entries:{name:strin
   if(ready)c.population=Math.min(pre.capacity,c.population+Math.max(1,Math.ceil(pre.happiness/35)));else if((pre.happiness<36||pre.power.supply<pre.power.demand||pre.water.supply<pre.water.demand)&&c.population>0)c.population=Math.max(0,c.population-1);
   c.day++;c.history=[];
   if((c.mission??0)===4){
-    const fresh=report(c);
-    c.stableDays=fresh.population>=20&&fresh.net>=0?(c.stableDays??0)+1:0;
+    // Count realized, settled fiscal days; do not count a projected surplus after migration.
+    c.stableDays=pre.population>=20&&pre.net>=0?(c.stableDays??0)+1:0;
   }
   const reward=completeMissions(c);
   if(reward)entries.push({name:'章节目标奖励',amount:reward});
