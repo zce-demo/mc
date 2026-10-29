@@ -41,7 +41,7 @@ function completeMissions(city:City):number {
 }
 
 export function predictNextDay(city:City){return report(city).net}
-function snapshot(c:City):CitySnapshot{return clone({cash:c.cash,taxRate:c.taxRate,buildings:c.buildings,parcels:c.parcels,nextId:c.nextId,mission:c.mission,stableDays:c.stableDays})}
+function snapshot(c:City):CitySnapshot{return clone({cash:c.cash,taxRate:c.taxRate,buildings:c.buildings,parcels:c.parcels,nextId:c.nextId,mission:c.mission,stableDays:c.stableDays,log:c.log})}
 export function dispatch(city:City,cmd:Command):{ok:true;city:City;message:string}|{ok:false;message:string}{
   const c=clone(city);if(cmd.type==='undo'){const last=c.history.pop();if(!last)return {ok:false,message:'当前没有可撤销的操作'};if(last.day!==c.day)return {ok:false,message:'跨日操作不可撤销'};Object.assign(c,last.before);return {ok:true,city:c,message:'已撤销最近一次操作'};}
   if(cmd.type==='build-path'){
