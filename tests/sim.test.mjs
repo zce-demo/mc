@@ -34,3 +34,25 @@ test('稳定盈利目标只能按实际日结连续完成',()=>{
   const next=nextDay(b);
   assert.equal(next.closing-next.opening,next.entries.reduce((sum,e)=>sum+e.amount,0));
 });
+
+test('新玩家可以从空镇推进并完成第一章',()=>{
+  let c=initialCity();
+  const build=(x,y,kind)=>{c=doIt(c,{type:'build',x,y,kind});};
+  c=doIt(c,{type:'build-path',cells:[{x:0,y:1},{x:0,y:2},{x:0,y:3}]});
+  assert.equal(c.mission,1);
+  build(1,1,'home');build(1,2,'home');build(-1,1,'shop');
+  assert.equal(c.mission,2);
+  build(-1,2,'power');build(1,3,'water');
+  for(let i=0;i<10&&c.mission<3;i++)c=nextDay(c).city;
+  assert.equal(c.mission,3,'水电和岗位应让第一批居民搬入');
+  build(-1,3,'school');build(-1,0,'clinic');
+  assert.equal(c.mission,4,'教育医疗达标应触发下一阶段');
+  build(0,-1,'road');build(1,-1,'farm');build(1,0,'home');
+  for(let i=0;i<30&&c.mission<5;i++){
+    const t=nextDay(c);
+    assert.equal(t.closing-t.opening,t.entries.reduce((sum,e)=>sum+e.amount,0));
+    c=t.city;
+  }
+  assert.equal(c.mission,5,'通过良性经营应能完成第一章');
+  assert.ok(c.population>=20);
+});
