@@ -1,1 +1,31 @@
 :root{font:14px/1.45 system-ui,-apple-system,"Microsoft YaHei",sans-serif;color:#273947}*{box-sizing:border-box}body{margin:0;overflow:hidden;background:#86b2a3}canvas{position:fixed;inset:0;touch-action:none}header{position:fixed;top:12px;left:12px;right:12px;min-height:55px;display:flex;align-items:center;gap:12px;justify-content:space-between;pointer-events:none}.brand,#stats,#toggle,footer,aside{pointer-events:auto;background:rgba(254,255,253,.95);box-shadow:0 8px 25px #1a3b4333;border:1px solid #dbe7e3;backdrop-filter:blur(14px)}.brand{border-radius:15px;padding:11px 16px;display:flex;gap:9px;align-items:center}.brand b{font-size:16px}.brand small{color:#748b94;font-weight:600}#stats{border-radius:13px;padding:11px 16px;display:flex;gap:17px;white-space:nowrap}#stats small{color:#639888;font-weight:600}button{font:inherit;cursor:pointer;border:1px solid #dce7e5;background:white;color:#345463;border-radius:9px;padding:7px 10px}button:hover{background:#eaf3f0}button:focus-visible{outline:3px solid #4aabb2}#toggle{padding:13px;border-radius:13px}aside{position:fixed;right:17px;top:84px;bottom:79px;width:338px;border-radius:17px;display:flex;flex-direction:column;overflow:hidden}aside.hidden{display:none}.tabs{display:flex;padding:10px 9px;border-bottom:1px solid #e3eeeb;gap:3px;overflow:auto}.tabs button{flex:1;padding:7px 5px;font-size:12px}.tabs .selected{background:#365b60;color:white}#panel{overflow-y:auto;padding:15px 16px 20px;scrollbar-width:thin}h2{font-size:18px;margin:0 0 9px}h3{font-size:13px;color:#64808a;margin:17px 0 8px}.sub{color:#6f8791;font-size:12px;margin:2px 0 13px}.quick{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.tools{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}.tool{min-height:76px;display:flex;flex-direction:column;align-items:center;gap:2px}.tool span{font-size:23px}.tool b{font-size:12px}.tool small{font-size:10px;color:#81969c}.tool.active{border-color:#298f8b;background:#e3f4ec}.finance,.service{border:1px solid #e3eae6;border-radius:13px;background:#f8fbf9;padding:12px;margin:10px 0}.finance>div{display:flex;justify-content:space-between;padding:6px 0}.finance strong{font-variant-numeric:tabular-nums}.net{border-top:1px solid #d7e3dc;margin-top:8px;font-weight:800}.service b{color:#406f75}.service p{font-size:12px;color:#607982;margin:5px 0}.service .warning{color:#a15f42}.service .ok{color:#32865f}.parcel-list{display:grid;gap:6px}.parcel{display:flex;justify-content:space-between;align-items:center}ol{padding-left:22px}li{margin:8px 0}.logs p{font-size:12px;border-top:1px solid #e2eae5;padding-top:8px;color:#66818a}footer{position:fixed;bottom:13px;left:50%;transform:translateX(-50%);display:flex;gap:7px;align-items:center;padding:9px 12px;border-radius:13px;white-space:nowrap}footer span{font-size:11px;color:#6b858b}footer button{padding:7px 9px}#toast{position:fixed;left:18px;top:86px;width:315px;max-width:calc(100vw - 36px);height:60px;display:flex;align-items:center;padding:12px 16px;background:#fff;color:#34535e;border:1px solid #d9e8e5;border-radius:13px;box-shadow:0 6px 22px #24434732;opacity:0;visibility:hidden;pointer-events:none}#toast.visible{opacity:1;visibility:visible}@media(max-width:860px){header{top:8px;left:8px;right:8px;gap:6px;flex-wrap:wrap}.brand{padding:8px}.brand small{display:none}#stats{gap:8px;padding:7px;font-size:11px}aside{top:108px;right:8px;bottom:65px;width:min(340px,calc(100vw - 16px))}footer{bottom:7px;width:calc(100vw - 12px);overflow:auto;justify-content:start}footer span:last-child{display:none}#toast{top:117px}}
+
+
+/* v0.1 first-playable polish: persistent mission guidance and accessible workspace */
+#mission{position:fixed;z-index:3;left:18px;top:86px;width:320px;max-width:calc(100vw - 36px);padding:16px 17px;background:rgba(251,253,251,.96);border:1px solid #d9e6df;border-radius:17px;box-shadow:0 10px 30px #183d382e;backdrop-filter:blur(14px)}
+#mission .mission-eyebrow{display:flex;justify-content:space-between;gap:12px;align-items:center;font-size:11px;font-weight:800;color:#698782}
+#mission .mission-eyebrow b{color:#27846e;white-space:nowrap}
+#mission h2{margin:9px 0 5px;font-size:19px;line-height:1.25}
+#mission p{font-size:13px;margin:0 0 9px;color:#415c61;line-height:1.55}
+#mission .mission-progress{padding:8px 10px;background:#e7f4ee;border-radius:9px;color:#267e65;font-weight:800;font-size:13px;font-variant-numeric:tabular-nums}
+#mission small{display:block;color:#7b8e8e;font-size:11px;line-height:1.5;margin:10px 0}
+#mission button{width:100%;font-weight:750;background:#246e62;color:white;border-color:#246e62}
+#mission button:hover{background:#1a594f}
+#stats{align-items:center}
+#stats>span{display:flex;flex-direction:column;gap:0;font-size:12px;line-height:1.25}
+#stats b{font-size:16px;font-variant-numeric:tabular-nums}
+#stats small{font-size:11px;font-variant-numeric:tabular-nums}
+footer button.primary{background:#266b60;border-color:#266b60;color:#fff;font-weight:800}
+footer button.primary:hover{background:#185749}
+#workspace{z-index:4}
+#toast{top:auto;bottom:92px;left:18px;width:310px;height:58px;z-index:10;transform:none;transition:opacity .12s ease;white-space:normal;overflow:hidden;line-height:1.4}
+.inspect-card{margin-top:15px;padding:12px;background:#f1f7f4;border:1px solid #d5e6dc;border-radius:12px}
+.inspect-card h3{font-size:14px;margin:0 0 7px;color:#2c665c}
+.inspect-card p{font-size:12px;color:#536f6b;margin:7px 0}
+.inspect-card small{color:#718a83}
+.operation-controls{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+.operation-controls button{font-size:12px;padding:6px 3px}
+.operation-controls button.selected{background:#246e62;color:#fff}
+button:active{transform:translateY(1px)}
+@media(max-width:960px){#mission{top:107px;left:8px;width:260px;padding:12px}#mission h2{font-size:16px}#mission small{display:none}#mission button{margin-top:8px}#stats>span{font-size:11px}#stats b{font-size:13px}}
+@media(max-width:620px){header{right:8px}#mission{top:110px;width:min(240px,calc(100vw - 90px));padding:10px 12px}#mission .mission-eyebrow{font-size:10px}#mission h2{font-size:14px}#mission p{font-size:11px}#mission .mission-progress{font-size:11px;padding:6px}#mission button{font-size:11px}#toast{bottom:77px;left:8px;width:270px;max-width:calc(100vw - 16px)}}
