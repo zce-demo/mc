@@ -24,7 +24,7 @@ function renderMission(){
     hidden=false;document.getElementById('workspace')!.classList.remove('hidden');renderPanels();draw();
   };
 }
-function persist(){try{localStorage.setItem('mc-v0.1',JSON.stringify({...city,history:[]}))}catch{}}
+function persist(){try{localStorage.setItem('mc-v0.1',JSON.stringify({...city,history:[]}));return true}catch{return false}}
 function inspectorHtml(){
   if(!inspected)return '';
   const b=city.buildings[key(inspected.x,inspected.y)];
@@ -47,7 +47,7 @@ function apply(cmd:Parameters<typeof dispatch>[1]){
   if(r.ok){city=r.city;persist();renderPanels();draw();}
   notify(r.ok&&(city.mission??0)>oldMission?'🎉 完成目标！奖励已发放':r.message);
 }
-function save(){persist();notify('💾 已保存当前城市')}
+function save(){notify(persist()?'💾 已保存当前城市':'⚠️ 浏览器存储失败，请尝试导出 JSON 备份')}
 try{const s=localStorage.getItem('mc-v0.1');if(s){const v=JSON.parse(s);if(v.version===1&&v.buildings&&Array.isArray(v.parcels)){city={...initialCity(),...v,history:[]};}}}catch{}
 function selectedName(){return selected in BUILDINGS?BUILDINGS[selected as Kind].name:selected==='inspect'?'检查':selected==='demolish'?'拆除':'平移'}
 function renderPanels(){const r=report(city);renderMission();stats.innerHTML=`<span>🪙 <b>${city.cash.toLocaleString()}</b> <small>${r.net>=0?'+':''}${r.net}/天</small></span><span>🏘️ <b>${city.population}/${r.capacity}</b></span><span>🙂 <b>${r.happiness}%</b></span><span>📅 <b>${city.day} 天</b></span>`;
