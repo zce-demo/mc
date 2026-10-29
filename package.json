@@ -1,1 +1,17 @@
-{"name":"my-mini-city","private":true,"version":"0.1.0","type":"module","scripts":{"build":"tsc -p tsconfig.json","test":"npm run build && node --test tests/*.test.mjs","dev":"npm run build && vite --host","preview":"python3 -m http.server 5173"},"devDependencies":{"typescript":"^5.9.0","vite":"^7.0.0"}}
+{
+  "name": "my-mini-city",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "npm run build && node --test tests/*.test.mjs",
+    "dev": "npm run build && vite --host",
+    "preview": "python3 -m http.server 5173",
+    "build:site": "npm run build && node scripts/build-site.mjs"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.0",
+    "vite": "^7.0.0"
+  }
+}
